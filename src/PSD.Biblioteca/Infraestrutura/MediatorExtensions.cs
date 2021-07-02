@@ -1,0 +1,33 @@
+﻿using PSD.Core.Comunicacao.Mediator;
+using PSD.Core.Interfaces;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace PSD.Biblioteca.Infraestrutura
+{
+    public static class MediatorExtensions
+    {
+        public static async Task PublicarEventos(this IMediatorHandler mediator, BibliotecaDbContext context)
+        {
+            var domainEntities = context.ChangeTracker
+                .Entries<IRaizAgregacao>()
+                .Where(x => x.Entity.Notificacoes != null && x.Entity.Notificacoes.Any());
+
+            var domainEvents = domainEntities
+                .SelectMany(x => x.Entity.Notificacoes)
+                .ToList();
+
+            domainEntities.ToList()
+                .ForEach(entity => entity.Entity.LimparEventos());
+
+            var tasks = domainEvents
+                .Select(async (domainEvent) =>
+                {
+                    await mediator.PublicarEvento(domainEvent);
+                });
+
+            await Task.WhenAll(tasks);
+        }
+
+    }
+}

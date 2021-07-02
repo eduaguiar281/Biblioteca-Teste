@@ -1,0 +1,20 @@
+version: '3.4'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server
+    container_name: biblioteca_db
+    environment:
+      SA_PASSWORD: "A123456@"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+  psd.biblioteca.webapi:
+    image: ${DOCKER_REGISTRY-}psdbibliotecawebapi
+    build:
+      context: .
+      dockerfile: PSD.Biblioteca.WebAPI/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIROMENT=Development
+    depends_on:
+      - sqlserver
